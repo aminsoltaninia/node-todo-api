@@ -12,9 +12,16 @@ const request= require('supertest');
 const{app}=require('../server');
 const{Todo}=require('./../models/todo');
 
+const todos =[{
+    text :"first text for test"
+},{
+    text :"second text for test"
+}]
 //paksaziye hameye dadeha ba dastore zir
 beforeEach((done)=>{
-    Todo.deleteMany({}).then(()=>{done()})
+    Todo.deleteMany({}).then(()=>{
+        return Todo.insertMany(todos);
+    }).then(()=>done())
 })//removw({}) yani hamaro az beyn bebare 
 
 
@@ -37,9 +44,9 @@ describe("POST /todos",()=>{
             }  
             //vaghti khata nadare
             Todo.find().then((todos)=>{
-                expect(todos.length).toBe(1);
+                expect(todos.length).toBe(3);
                 console.log(`length Todos : ${todos.length}`);
-                expect(todos[0].text).toBe(text);
+                expect(todos[2].text).toBe(text);
                 done();//etmamesh byad done konim          
             }).catch((e)=>done(e));//baraye eror yabiye bad az find
             //catch vaghto rokh mide ke error dashte bashim to prozhe
@@ -60,12 +67,27 @@ describe("POST /todos",()=>{
               }
               Todo.find().then((todos)=>{
                     console.log(todos.length)
-                    expect(todos.length).toBe(1)
+                    expect(todos.length).toBe(3)
                     done();
 
               }).catch((e)=>{
                   done(e);
               })
           })
+    })
+})
+
+describe("GET /todos",()=>{
+    it("should get all todos",(done)=>{
+       request(app)
+          .post('/todos')
+          .expect(400)
+          .end((err,res)=>{
+            Todo.find().then((todos)=>{
+                  expect(todos.length).toBe(3)
+                  done();
+
+            })
+        })
     })
 })
