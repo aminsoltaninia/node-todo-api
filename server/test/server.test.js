@@ -85,7 +85,7 @@ describe("GET /todos",()=>{
           .end((err,res)=>{
             Todo.find().then((todos)=>{
                   expect(todos.length).toBe(3)
-                  done();
+                  done()
 
             })
         })
