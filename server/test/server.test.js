@@ -11,11 +11,16 @@ const request= require('supertest');
 
 const{app}=require('../server');
 const{Todo}=require('./../models/todo');
+const{ObjectID}=require('mongodb');
 
 const todos =[{
-    text :"first text for test"
+    _id:new ObjectID(),
+    text :"first text for test",
+    name : "amin1"
 },{
-    text :"second text for test"
+    _id:new ObjectID(),
+    text :"second text for test",
+    name : "amin2"
 }]
 //paksaziye hameye dadeha ba dastore zir
 beforeEach((done)=>{
@@ -27,13 +32,13 @@ beforeEach((done)=>{
 
 describe("POST /todos",()=>{
     it("should create a new Todo",(done)=>{
-        var text ="text todo text";
+        var text = "text todo text";
 
 
         request(app)
         .post('/todos')//masiri ke dakhele server.js hast
         .send({text})
-        .expect(400)// entezar darm status ==200 bashe
+        .expect(200)// entezar darm status ==200 bashe
         .expect((res)=>{
             expect(res.body.text).toBe(text)//yani text res ba text ersali yki bashe
 
@@ -45,7 +50,7 @@ describe("POST /todos",()=>{
             //vaghti khata nadare
             Todo.find().then((todos)=>{
                 expect(todos.length).toBe(3);
-                console.log(`length Todos : ${todos.length}`);
+                //console.log(`length Todos : ${todos.length}`);
                 expect(todos[2].text).toBe(text);
                 done();//etmamesh byad done konim          
             }).catch((e)=>done(e));//baraye eror yabiye bad az find
@@ -59,14 +64,14 @@ describe("POST /todos",()=>{
         request(app)
           .post('/todos')
           .send({})
-          //.expect(400)
+          .expect(200)
           .end((err,res)=>{
               if(err){
-                  console.log("hi")
+                  //console.log("hi")
                   return done(err)
               }
               Todo.find().then((todos)=>{
-                    console.log(todos.length)
+                    //console.log(todos.length)
                     expect(todos.length).toBe(3)
                     done();
 
@@ -80,14 +85,45 @@ describe("POST /todos",()=>{
 describe("GET /todos",()=>{
     it("should get all todos",(done)=>{
        request(app)
-          .post('/todos')
-          .expect(400)
-          .end((err,res)=>{
-            Todo.find().then((todos)=>{
-                  expect(todos.length).toBe(3)
-                  done()
+          .get('/todos')
+          .expect(200)
+          .expect((res)=>{
+                  expect(res.body.todos.length).toBe(2)
 
             })
-        })
+          .end(done) 
+    })
+    
+})
+
+describe("GET /todos/:id",()=>{
+    it("Should return todo doc ",(done)=>{
+        request(app)
+          .get(`/todos/${todos[0]._id.toHexString()}`)//tohexstring adade id ro mide
+          .expect(200)
+          .expect((res)=>{
+              expect(res.body.todo.text).toBe(todos[0].text)
+          }) 
+          .end(done);   
+    })
+
+    it("should retutn 404 if todo not found",(done)=>{
+        var hexID = new ObjectID().toHexString();
+        
+
+        request(app)
+          .get(`/todos/${hexID}`)
+          .expect(404)
+          .end(done)
+
+
+    })
+
+    it("should return for non-object id",(done)=>{
+        request(app)
+          .get('/todos/123456')
+          .expect(404)
+          .end(done)
+
     })
 })
