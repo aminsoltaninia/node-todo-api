@@ -15,13 +15,14 @@ const{ObjectID}=require('mongodb');
 
 const todos = [{
     _id:new ObjectID(),
-    text :"first text for test",
-    name : "amin1"
+    text :"first text for test"
 }, {
     _id:new ObjectID(),
     text :"second text for test",
-    name : "amin2"
-}];
+    completed :true,
+    completedAt : 2222
+    
+}]
 //paksaziye hameye dadeha ba dastore zir
 beforeEach((done)=>{
     Todo.deleteMany({}).then(()=>{
@@ -64,7 +65,7 @@ describe("POST /todos",()=>{
         request(app)
           .post('/todos')
           .send({})
-          .expect(200)
+          .expect(400)
           .end((err,res)=>{
               if(err){
                   //console.log("hi")
@@ -72,7 +73,7 @@ describe("POST /todos",()=>{
               }
               Todo.find().then((todos)=>{
                     //console.log(todos.length)
-                    expect(todos.length).toBe(3)
+                    expect(todos.length).toBe(2)
                     done();
 
               }).catch((e)=>{
@@ -96,37 +97,39 @@ describe("GET /todos",()=>{
     
 })
 
-describe("GET /todos/:id",()=>{
-    it("Should return todo doc ",(done)=>{
-        request(app)
-          .get(`/todos/${todos[0]._id.toHexString()}`)//tohexstring adade id ro mide
-          .expect(200)
-          .expect((res)=>{
-              expect(res.body.todo.text).toBe(todos[0].text)
-          }) 
-          .end(done);   
-    })
-
-    it("should retutn 404 if todo not found",(done)=>{
-        var hexID = new ObjectID().toHexString();
+ describe("GET /todos/:id",()=>{
+     it("Should return todo doc ",(done)=>{
+        console.log(`/todos/${todos[0]._id.toHexString()}`);
+        console.log()
+         request(app)
+           .get(`/todos/${todos[0]._id.toHexString()}`)//tohexstring adade id ro mide
+           .expect(200)
+           .expect((res)=>{
+               expect(res.body.todo.text).toBe(todos[0].text)
+           }) 
+           .end(done);   
+     })
+     
+     it("should retutn 404 if todo not found",(done)=>{
+         var hexID = new ObjectID().toHexString();
         
 
-        request(app)
-          .get(`/todos/${hexID}`)
-          .expect(404)
-          .end(done)
+         request(app)
+           .get(`/todos/${hexID}`)
+           .expect(404)
+           .end(done)
 
 
-    })
+     })
 
-    it("should return for non-object id",(done)=>{
-        request(app)
-          .get('/todos/123456')
-          .expect(404)
-          .end(done)
+     it("should return for non-object id",(done)=>{
+         request(app)
+           .get('/todos/123456')
+           .expect(404)
+           .end(done)
 
-    })
-})
+     })
+ })
 
 
 describe("DELETE /todos/:id",()=>{
@@ -167,4 +170,45 @@ describe("DELETE /todos/:id",()=>{
           .end(done)
     
    })
+})
+
+describe("PATCH /todos/:id",()=>{
+    it('Should update todo',(done)=>{
+        var hexid = todos[0]._id.toHexString();
+        var text = 'this should be the new text for firt';
+
+        request(app)
+          .patch(`/todos/${hexid}`)
+          .send({
+              completed:true,
+              text
+          })
+          .expect(200)
+          .expect((res)=>{
+              expect(res.body.text).toBe(text)
+              expect(res.body.completed).toBe(true)
+              expect(typeof res.body.completedAt).toBe('number')
+           })
+           .end(done)
+
+    })
+    it("SHould clear completedAt when in todo compeleted is false",(done)=>{
+
+        var hexid = todos[1]._id.toHexString();
+        var text = 'this should be the new text for second';
+
+        request(app)
+          .patch(`/todos/${hexid}`)
+          .send({
+              completed:false,
+              text
+          })
+          .expect(200)
+          .expect((res)=>{
+              expect(res.body.text).toBe(text)
+              expect(res.body.completed).toBe(false)
+              expect(res.body.completedAt).toBeNull()
+           })
+           .end(done)
+    })
 })

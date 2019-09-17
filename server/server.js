@@ -4,6 +4,7 @@ var {ObjectID}=require('mongodb');
 var {User}=require('./models/user');
 const express=require('express');
 const bodyParser=require('body-parser');//ba nasbe body parser kole systeme ma to in shakhe be sorate json mishe
+const _ =require('lodash');
 
 
 var app = express();
@@ -17,50 +18,95 @@ app.post('/todos',(req,res)=>{
        text : req.body.text
     });
     todo.save().then((doc)=>{
-        res.send(doc);
+        res.send(doc)
     },(err)=>{
-        res.status(400).send(err);
+        res.status(400).send(err)
     }) 
 
 })
-app.get('/todos',(req,res)=>{
-    Todo.find().then((todos)=>{
-        res.send({todos});
-    },(e)=>{
-        res.status(400).send(e);
-    })
-})
-app.get('todos/:id',(req,res)=>{ 
-    var id = req.params.id;
-    //console.log(`isvalid:${id}`);
-    //  if(!(ObjectID.isValid(id))){
-    //      return res.status(404).send();
-    //  }
-
-    Todo.findById(id).then((todo)=>{
-          if(!todo){
-              return res.status(404).send();
-          }
-        res.send({todo});
-    }).catch(()=>{
-         res.status(404).send();   
+ app.get('/todos',(req,res)=>{
+     Todo.find().then((todos)=>{
+         res.send({todos})
+     },(e)=>{
+         res.status(400).send(e)
      })
-})
+ });
 
-app.delete('/todos/:id',(req,res)=>{
-    var id = req.params.id;
-    if(!ObjectID.isValid(id)){
+app.get('/todos/:id',(req,res)=>{ 
+    //console.log(req);
+    
+    var Id = req.params.id;
+    //console.log(ObjectID.isValid(Id));
+    if(!(ObjectID.isValid(Id)))
+    {
+        console.log("ID not valid ");
+        return res.status(404).send()
+    }
+    Todo.findById(Id).then((todo)=>{
+        //bara vaghti ke iq valid hast vali vojod nadare
+        if(!todo){
+            console.log("ID valid .... not exixst");
+            return res.status(404).send()
+        }
+        else{
+            console.log("todo is ... sending");
+           res.send({todo})
+        }
+
+
+    }).catch((e)=>{
+        res.status(404).send()
+    })
+});
+
+ app.delete('/todos/:id',(req,res)=>{
+     var id = req.params.id;
+     if(!ObjectID.isValid(id)){
+         return res.status(404).send();
+     }
+     Todo.findOneAndDelete({_id:new ObjectID(id)}).then((todo)=>{
+         if(!todo){
+             return res.status(400).send();
+         }
+         res.send(todo);
+     }).catch((e)=>{
+         res.status(404).send();
+     })
+ })
+// update -> loadash -> put and patch
+//put baraye hme ham onvan ham  meghdar
+// patch just for title
+
+app.patch('/todos/:id',(req,res)=>{
+    var Id=req.params.id;
+    var body = _.pick(req.body,['text','completed']);
+    if(!ObjectID.isValid(Id)){
         return res.status(404).send();
     }
-    Todo.findOneAndDelete({_id:new ObjectID(id)}).then((todo)=>{
+
+    if(_.isBoolean(body.completed)&&body.completed)//vojod dashtanesho ham chek mikonim
+    {
+        //time stamp yani yek adad ke makhsoose har roozi to tarikhe 
+        //mohaser befarde
+        console.log("time stamp is set now",new Date().getTime());
+        body.completedAt = new Date().getTime();
+    }
+    else{//agr vojod nadasht
+        body.completed=false;
+        body.completedAt=null;
+
+    }
+    Todo.findOneAndUpdate({_id :new ObjectID(Id)},{$set:body},{new:true}).then((todo)=>{
         if(!todo){
-            return res.status(400).send();
+            return res.status(404).send()
         }
-        res.send(todo);
+        res.send(todo)
     }).catch((e)=>{
-        res.status(404).send();
+        res.status(400).send()
     })
 })
+
+
 
 app.listen(3000,()=>{
     console.log("started on port 3000");
