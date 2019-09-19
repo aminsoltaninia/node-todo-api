@@ -107,6 +107,30 @@ app.patch('/todos/:id',(req,res)=>{
 })
 
 
+// JWT  json web token or hashing 
+// instll jasonwebtoken npm
+// install npm validator in user
+// install npm crypto for hashing 
+// POST for user estefde msieh chon kheili ghavitar az get hast
+app.post('/users',(req,res)=>{
+    var body = _.pick(req.body,['email','password']);//email va pass ro migirim
+    var user =new User(body); 
+    //console.log("this is users");
+    
+    
+    
+    user.save().then(()=>{
+        console.log("generate auth");
+        return user.genereateAUTHToken();
+    }).then((token)=>{
+        res.header('x-auth',token).send(user);
+    }).catch((e)=>{
+        res.status(400).send(e)
+    })
+
+
+})
+
 
 app.listen(3000,()=>{
     console.log("started on port 3000");
