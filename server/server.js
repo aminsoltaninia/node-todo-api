@@ -5,7 +5,7 @@ var {User}=require('./models/user');
 const express=require('express');
 const bodyParser=require('body-parser');//ba nasbe body parser kole systeme ma to in shakhe be sorate json mishe
 const _ =require('lodash');
-
+var{authenticate}=require('./middlewares/authenticate');
 
 var app = express();
 
@@ -130,6 +130,16 @@ app.post('/users',(req,res)=>{
 
 
 })
+
+// ijade profile karbari baraye kasaii ke to site sabte  nam mikonan
+//age token dasht mitone dastresi peyda kone
+// User profile
+
+app.get('/users/me',authenticate,(req,res)=>{
+        res.send(req.user)
+})
+
+
 
 
 app.listen(3000,()=>{

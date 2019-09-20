@@ -44,7 +44,7 @@ var UserSchema = new mongoose.Schema({//schema beheom ejaze mide
 UserSchema.methods.toJSON=function(){
     var user = this;
     var userObject = user.toObject();
-    console.log(`userobject : ${userObject}`);
+    console.log('userobject : ',userObject);
     return _.pick(userObject,['_id','email'])
 }
 
@@ -60,6 +60,24 @@ UserSchema.methods.genereateAUTHToken = function(){
         return token;
     })
     
+}
+// for user profile
+UserSchema.statics.findByToken =function(token){
+    var User = this ;
+    var decoded;
+
+    try{
+       decoded=jwt.verify(token,'123abc')
+    }catch(e){
+       return Promise.reject();
+    }
+    console.log("decoded is :",decoded);
+    console.log(`User is : ${User}`);
+    return User.findOne({
+        '_id':decoded._id,
+        'tokens.token':token,
+        'tokens.access':'auth'
+    })
 }
 
 var User = mongoose.model('User',UserSchema)
