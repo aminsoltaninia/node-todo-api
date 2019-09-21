@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 var UserSchema = new mongoose.Schema({//schema beheom ejaze mide
     //dakehel in object method ijad konim
     email:
@@ -79,7 +80,31 @@ UserSchema.statics.findByToken =function(token){
         'tokens.access':'auth'
     })
 }
+/*
+Pre middleware functions are executed one after another, when each middleware calls next.
 
+var schema = new Schema(..);
+schema.pre('save', function(next) {
+  // do stuff
+  next();
+});
+*/
+// inja roye methode save middleware ejra mikone 
+UserSchema.pre('save',function(next){
+    var user = this;
+    //isModify baresi mikone ke field morede nazar eslah shode bashe
+
+    if(user.isModified('password')){
+        bcrypt.genSalt(10,(err,salt)=>{
+            bcrypt.hash(user.password,salt,(err,hash)=>{
+                user.password=hash;//pas ro ba salt tarkib va hash mikone 
+                next();
+            });
+        });
+    }else{
+        next();
+    }
+})
 var User = mongoose.model('User',UserSchema)
 
 module.exports={User}

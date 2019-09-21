@@ -6,7 +6,7 @@ const express=require('express');
 const bodyParser=require('body-parser');//ba nasbe body parser kole systeme ma to in shakhe be sorate json mishe
 const _ =require('lodash');
 var{authenticate}=require('./middlewares/authenticate');
-
+const bcrypt = require('bcryptjs');
 var app = express();
 
 app.use(bodyParser.json());
@@ -139,7 +139,8 @@ app.get('/users/me',authenticate,(req,res)=>{
         res.send(req.user)
 })
 
-
+// baraye kar kardan roye password az bcrypjs estefade mikonim
+// npm i bcryptjs
 
 
 app.listen(3000,()=>{

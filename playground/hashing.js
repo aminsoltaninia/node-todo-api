@@ -1,5 +1,20 @@
 const {SHA256}=require('crypto-js')//faghat algoritm sha256 ro estekhraj mikonim va estefade
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+//hashing for password
+
+var pasword = "123abc";
+// 10 caracter gozashtim param 1 ro
+bcrypt.genSalt(10,(err,salt)=>{
+    bcrypt.hash(pasword,salt,(err,hash)=>{
+        console.log(`hash : ${hash}`);//random password mide
+    })
+})
+var hashpassword='$2a$10$GiL9S8p8OtJdoD4OzocENOCxRljC9CjJdFBG2peNmz1NdYiNmPw7S';
+bcrypt.compare('123abc',hashpassword,(err,res)=>{
+    console.log(`result compair is :${res}`);
+})
 /// for hashing
 var message ="I am user number 3";
 var hash = SHA256(message).toString();
